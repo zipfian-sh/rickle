@@ -15,7 +15,7 @@ from rickle.tools import CLIError
 from rickle.cli.schema import gen, check
 from rickle.cli.conv import conv
 from rickle.cli.serve import serve
-from rickle.cli.obj import obj_get, obj_set, obj_put, obj_del, obj_search, obj_type, obj_func, obj_find
+from rickle.cli.obj import obj_get, obj_set, obj_put, obj_rm, obj_search, obj_type, obj_func, obj_find
 
 GITHUB_DOCS_URL = "https://github.com/zipfian-sh/rickle/blob/master/docs/source/cli_tools.rst#cli-tools"
 
@@ -284,7 +284,7 @@ Examples:
                                 help=f"{cli_bcolors.OKBLUE}key{cli_bcolors.ENDC} to delete",
                                 metavar='key')
 
-    rm_obj_parser.set_defaults(func=obj_del)
+    rm_obj_parser.set_defaults(func=obj_rm)
 
     #################### OBJ - TYPE #####################
     #  _______   _____ ___

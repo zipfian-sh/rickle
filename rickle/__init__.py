@@ -1181,16 +1181,16 @@ class Rickle(BaseRickle):
                             continue
                         if v['type'] == 'api':
                             self.add_api(name=k,
-                                                   url=v['url'],
-                                                   http_verb=v.get('http_verb', 'GET'),
-                                                   headers=v.get('headers', None),
-                                                   params=v.get('params', None),
-                                                   body=v.get('body', None),
-                                                   load_as_rick=v.get('load_as_rick', False),
-                                                   load_lambda=v.get('load_lambda', False),
-                                                   deep=v.get('deep', False),
-                                                   expected_http_status=v.get('expected_http_status', 200),
-                                                   hot_load=v.get('hot_load', False))
+                                           url=v['url'],
+                                           http_verb=v.get('http_verb', 'GET'),
+                                           headers=v.get('headers', None),
+                                           params=v.get('params', None),
+                                           body=v.get('body', None),
+                                           load_as_rick=v.get('load_as_rick', False),
+                                           load_lambda=v.get('load_lambda', False),
+                                           deep=v.get('deep', False),
+                                           expected_http_status=v.get('expected_http_status', 200),
+                                           hot_load=v.get('hot_load', False))
                             continue
                         if v['type'] == 'secret':
                             self.add_secret(name=k,
@@ -1324,7 +1324,7 @@ class Rickle(BaseRickle):
                 # d[actual_key] = self._meta_info[key]
                 continue
             elif key in self._meta_info.keys() and \
-                    self._meta_info[key]['type'] in ['file', 'html_page', 'api_json', 'secret', 'random'] and \
+                    self._meta_info[key]['type'] in ['file', 'api', 'secret', 'random'] and \
                     self._meta_info[key]['hot_load']:
                 # d[actual_key] = self._meta_info[key]
                 continue
@@ -1636,15 +1636,19 @@ class Rickle(BaseRickle):
                         _body = dict(body) if body else None
                         _headers = dict(headers) if headers else None
                         _params = dict(params) if params else None
-                        _load = f"""lambda self=self: self._load_api_json(url='{str(url)}', 
-                                                        http_verb='{str(http_verb)}', 
-                                                        headers={_headers}, 
-                                                        params={_params}, 
-                                                        body={_body},
-                                                        load_as_rick={load_as_rick == True},
-                                                        deep={deep == True},
-                                                        load_lambda={load_lambda == True},
-                                                        expected_http_status={int(expected_http_status)})"""
+                        _load = f"""lambda self=self,\
+                                            headers={_headers},\
+                                            params={_params},\
+                                            body={_body}:\
+                                    self._load_api(url='{str(url)}', 
+                                        http_verb='{str(http_verb)}', 
+                                        headers=headers, 
+                                        params=params, 
+                                        body=body,
+                                        load_as_rick={load_as_rick == True},
+                                        deep={deep == True},
+                                        load_lambda={load_lambda == True},
+                                        expected_http_status={int(expected_http_status)})"""
 
                         self.__dict__.update({name: eval(_load)})
                     else:
@@ -1652,7 +1656,7 @@ class Rickle(BaseRickle):
                 except Exception as exc:
                     raise exc
             except Exception as exc:
-                raise ValueError(f"At 'add_api_json_call', when trying to add lambda, this happened {exc}")
+                raise ValueError(f"At 'add_api', when trying to add lambda, this happened {exc}")
 
         else:
             result = self._load_api(url=url,

@@ -235,7 +235,7 @@ Then (assuming the contents of the text file changed since):
 "this app can break"
 ```
 
-## Add from REST API
+## Add from API
 
 Data can also be loaded from an API, expecting a JSON response.
 
@@ -311,6 +311,16 @@ Notice how it is called with parentheses because it is now a function (``hot_loa
     Code injection is a high risk and this advanced usage is only recommend when a high level of trust in the source is established.
     
     **Do not blindly load files with ``load_lambda=True``.**
+
+???+ tip "Dynamic `params`, `body`, `headers`"
+
+    What's even more useful of a hot load is that the `body`, `params`, and `headers` can be passed when calling the function:
+    
+    ```pycon
+    >>> rick = Rickle('secret_api.yaml', load_lambda=True)
+    >>> rick.user_list(headers={'api_key': 'XXX'}, params={'gender': 'female'})
+    {...}
+    ```
 
 ## Add base 64 encoded
 
