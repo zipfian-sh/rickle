@@ -8,7 +8,6 @@ from typing import Union, TypeVar
 from io import TextIOWrapper, BytesIO, StringIO
 import yaml
 import base64
-import types
 import re
 import inspect
 from functools import partial
@@ -30,7 +29,7 @@ else:
     import tomllib as toml
 
 from rickle.tools import toml_null_stripper, inflate_dict, flatten_dict, parse_ini, unparse_ini, supported_encodings, \
-    generate_random_value
+    generate_random_value, object_to_dict
 
 yaml.add_representer(OrderedDict, lambda dumper, data: dumper.represent_mapping('tag:yaml.org,2002:map', data.items()))
 
@@ -112,17 +111,23 @@ class BaseRickle:
                 except:
                     pass
             except (ImportError, ModuleNotFoundError):
-                print("#######################3")
                 pass
 
             stringed = base
 
         if not init_args is None:
             for k, v in init_args.items():
+                _handlebars = init_args.get("RICKLE_HANDLEBARS", os.getenv('RICKLE_HANDLEBARS', "{{}}"))
+                if len(_handlebars) % 2 > 0:
+                    raise ValueError(f"The string length ({len(_handlebars)}) of the handlebars passed ({_handlebars}) are not even, i.e. can not split in the 'middle'")
+
+                _halfpoint = int(len(_handlebars)/2)
+                _opening = _handlebars[:_halfpoint]
+                _closing = _handlebars[_halfpoint:]
                 _k = "{opening}{key}{closing}".format(
-                    opening=init_args.get("RICKLE_OPENING_BRACES", os.getenv('RICKLE_OPENING_BRACES', "{{")),
+                    opening=_opening,
                     key=k,
-                    closing=init_args.get("RICKLE_CLOSING_BRACES", os.getenv('RICKLE_CLOSING_BRACES', "}}"))
+                    closing=_closing
                 )
                 stringed = stringed.replace(_k, json.dumps(v))
 
@@ -414,38 +419,45 @@ class BaseRickle:
         else:
             raise TypeError("Key can only be of case sensitive string type or if created from list, an integer index!")
 
-    def _find_key_value(self, key, value, op:str, dictionary=None, parent_path=None, report_parent: bool = False):
+    def __contains__(self, key):
+        return key in self.dict()
+
+    def _find_key_value(self, key, value, op:str, rick=None, parent_path=None, report_parent: bool = False):
         values = list()
-        if key in dictionary:
-            if (op == '=' and dictionary[key] == value) or \
-                    (op == 'eq' and dictionary[key] == value) or \
-                (op == '!=' and dictionary[key] != value) or \
-                    (op == 'ne' and dictionary[key] != value) or \
-                (op == '>' and dictionary[key] > value) or \
-                    (op == 'gt' and dictionary[key] > value) or \
-                (op == '>=' and dictionary[key] >= value) or \
-                    (op == 'gte' and dictionary[key] >= value) or \
-                (op == '<' and dictionary[key] < value) or \
-                    (op == 'lt' and dictionary[key] < value) or \
-                (op == '<=' and dictionary[key] <= value) or\
-                    (op == 'lte' and dictionary[key] <= value):
-                if report_parent:
-                    values = [f'{parent_path}']
-                else:
-                    values = [f'{parent_path}{self._path_sep}{key}']
-        for k, v in dictionary.items():
-            if isinstance(v, BaseRickle):
+        if key in rick or self._path_sep in key:
+            try:
+                v = rick.get(key)
+
+                if ((v and not value is None) and
+                        ((op == '=' and v == value) or \
+                        (op == '==' and v == value) or \
+                         (op == 'eq' and v == value) or \
+                         (op == '!=' and v != value) or \
+                        (op == 'ne' and v != value) or \
+                    (op == '>' and v > value) or \
+                        (op == 'gt' and v > value) or \
+                    (op == '>=' and v >= value) or \
+                        (op == 'gte' and v >= value) or \
+                    (op == '<' and v < value) or \
+                        (op == 'lt' and v < value) or \
+                    (op == '<=' and v <= value) or\
+                        (op == 'lte' and v <= value))):
+                    if report_parent:
+                        values = [f'{parent_path}']
+                    elif key.startswith(self._path_sep):
+                        values = [f'{parent_path}{key}']
+                    else:
+                        values = [f'{parent_path}{self._path_sep}{key}']
+
+            except Exception as exc:
+                pass
+
+        for k in rick.keys():
+            v = rick.get(k)
+            if isinstance(v, BaseRickle) or isinstance(v, dict):
                 try:
-                    paths_list = self._find_key_value(key=key, value=value, op=op, dictionary=v.dict(),
+                    paths_list = self._find_key_value(key=key, value=value, op=op, rick=v,
                                               parent_path=f'{parent_path}{self._path_sep}{k}',
-                                                      report_parent=report_parent)
-                    values.extend(paths_list)
-                except StopIteration:
-                    continue
-            if isinstance(v, dict):
-                try:
-                    paths_list = self._find_key_value(key=key, value=value, op=op, dictionary=v,
-                                                      parent_path=f'{parent_path}{self._path_sep}{k}',
                                                       report_parent=report_parent)
                     values.extend(paths_list)
                 except StopIteration:
@@ -453,13 +465,8 @@ class BaseRickle:
             if isinstance(v, list):
                 try:
                     for ix, el in enumerate(v):
-                        if isinstance(el, dict):
-                            paths_list = self._find_key_value(key=key, value=value, op=op, dictionary=el,
-                                                      parent_path=f'{parent_path}{self._path_sep}{k}{self._path_sep}[{ix}]',
-                                                              report_parent=report_parent)
-                            values.extend(paths_list)
-                        if isinstance(el, BaseRickle):
-                            paths_list = self._find_key_value(key=key, value=value, op=op, dictionary=el.dict(),
+                        if isinstance(el, dict) or isinstance(el, BaseRickle):
+                            paths_list = self._find_key_value(key=key, value=value, op=op, rick=el,
                                                       parent_path=f'{parent_path}{self._path_sep}{k}{self._path_sep}[{ix}]',
                                                               report_parent=report_parent)
                             values.extend(paths_list)
@@ -484,13 +491,13 @@ class BaseRickle:
                 return self._find_key_value(key=key,
                                             value=value,
                                             op=op,
-                                            dictionary={f'[{ix}]':_d.dict() for ix, _d in enumerate(self.__list__)},
+                                            rick={f'[{ix}]':_d for ix, _d in enumerate(self.__list__)},
                                             parent_path='',
                                             report_parent=report_parent)
             return self._find_key_value(key=key,
                                         value=value,
                                         op=op,
-                                        dictionary=self.dict(),
+                                        rick=self,
                                         parent_path='',
                                         report_parent=report_parent)
         except StopIteration:
@@ -1155,7 +1162,7 @@ class Rickle(BaseRickle):
                             self.add_base64(name=k,
                                             load=v['load'])
                             continue
-                        if v['type'] == 'file' or v['type'] == 'from_file':
+                        if v['type'] == 'file':
                             self.add_file(name=k,
                                                file_path=v['file_path'],
                                                load_as_rick=v.get('load_as_rick', False),
@@ -1165,15 +1172,15 @@ class Rickle(BaseRickle):
                                                encoding=v.get('encoding', 'utf-8'),
                                                hot_load=v.get('hot_load', False))
                             continue
-                        if v['type'] == 'csv' or v['type'] == 'from_csv':
+                        if v['type'] == 'csv':
                             self.add_csv(name=k,
                                               file_path_or_str=v['file_path'],
                                               fieldnames=v.get('fieldnames', None),
                                               load_as_rick=v.get('load_as_rick', False),
                                               encoding=v.get('encoding', 'utf-8'))
                             continue
-                        if v['type'] == 'api_json':
-                            self.add_api_json(name=k,
+                        if v['type'] == 'api':
+                            self.add_api(name=k,
                                                    url=v['url'],
                                                    http_verb=v.get('http_verb', 'GET'),
                                                    headers=v.get('headers', None),
@@ -1379,10 +1386,6 @@ class Rickle(BaseRickle):
                                  'value_properties': value_properties,
                                  'hot_load': hot_load}
 
-    def add_env_variable(self, name, load, default=None):
-        warnings.warn(message="'add_env_variable' will be removed after version 1.4. Use 'add_env' instead")
-        self.add_env(name=name,load=load,default=default)
-
     def add_env(self, name, load, default=None):
         """
         Add a new OS ENVIRONMENT VARIABLE to Rick.
@@ -1410,16 +1413,6 @@ class Rickle(BaseRickle):
         self._meta_info[name] = {'type': 'base64',
                                  'load': load
                                  }
-
-    def add_csv_file(self,
-                     name,
-                     file_path: str,
-                     fieldnames: list = None,
-                     load_as_rick: bool = False,
-                     encoding: str = 'utf-8'
-                     ):
-        warnings.warn(message="'add_csv_file' will be removed after version 1.4. Use 'add_csv' instead")
-        self.add_csv(name=name,file_path_or_str=file_path,fieldnames=fieldnames,load_as_rick=load_as_rick,encoding=encoding)
 
     def add_csv(self,
                      name,
@@ -1507,18 +1500,6 @@ class Rickle(BaseRickle):
                 with open(file_path, 'r', encoding=encoding) as fn:
                     return fn.read()
 
-    def add_from_file(self,name,
-                      file_path: str,
-                      load_as_rick: bool = False,
-                      deep: bool = False,
-                      load_lambda: bool = False,
-                      is_binary: bool = False,
-                      encoding: str = 'utf-8',
-                      hot_load: bool = False):
-        warnings.warn(message="'add_from_file' will be removed after version 1.4. Use 'add_file' instead")
-        self.add_file(name=name,file_path=file_path,load_as_rick=load_as_rick,deep=deep,load_lambda=load_lambda,
-                      is_binary=is_binary,encoding=encoding,hot_load=hot_load)
-
     def add_file(self, name,
                       file_path: str,
                       load_as_rick: bool = False,
@@ -1579,78 +1560,8 @@ class Rickle(BaseRickle):
                                  'hot_load': hot_load
                                  }
 
-    def _load_html_page(self,
-                        url: str,
-                        headers: dict = None,
-                        params: dict = None,
-                        expected_http_status: int = 200):
-        r = requests.get(url=url, params=params, headers=headers)
 
-        if r.status_code == expected_http_status:
-            return r.text
-        else:
-            raise ValueError(f'Unexpected HTTP status code in response {r.status_code}')
-
-    def add_html_page(self,
-                      name,
-                      url: str,
-                      headers: dict = None,
-                      params: dict = None,
-                      expected_http_status: int = 200,
-                      hot_load: bool = False):
-        """
-        Loads HTML page as property.
-
-        Args:
-            name (str): Property name.
-            url (str): URL to load from.
-            headers (dict): Key-value pair for headers (default = None).
-            params (dict): Key-value pair for parameters (default = None).
-            expected_http_status (int): Should a none 200 code be expected (default = 200).
-            hot_load (bool): Load the data on calling or load it only once on start (cold) (default = False).
-
-        """
-        name = self._check_kw(name)
-        if hot_load:
-            try:
-                from urllib3.util import parse_url
-                try:
-                    parsed = parse_url(url)
-                    if all([parsed.scheme, parsed.host]) and self._init_args['load_lambda']:
-                        _headers = dict(headers) if headers else None
-                        _params = dict(params) if params else None
-                        _load = f"""lambda self=self: self._load_html_page(url='{str(url)}',
-                                                                  headers={_headers},
-                                                                  params={_params},
-                                                                  expected_http_status={int(expected_http_status)})"""
-
-                        self.__dict__.update({name: eval(_load)})
-                    else:
-                        raise ValueError(f"When trying to add lambda, one or more checks failed")
-                except Exception as exc:
-                    raise exc
-
-            except Exception as exc:
-                raise ValueError(f"At 'add_html_page', when trying to add lambda, this happened {exc}")
-
-
-        else:
-            result = self._load_html_page(url=url,
-                                          headers=headers,
-                                          params=params,
-                                          expected_http_status=expected_http_status)
-
-            self.__dict__.update({name: result})
-
-        self._meta_info[name] = {'type': 'html_page',
-                                 'url': url,
-                                 'headers': headers,
-                                 'params': params,
-                                 'expected_http_status': expected_http_status,
-                                 'hot_load': hot_load
-                                 }
-
-    def _load_api_json(self,
+    def _load_api(self,
                             url: str,
                             http_verb: str = 'GET',
                             headers: dict = None,
@@ -1666,34 +1577,24 @@ class Rickle(BaseRickle):
             r = requests.get(url=url, params=params, headers=headers)
 
         if r.status_code == expected_http_status:
-            json_dict = r.json()
+            if r.headers.get('content-type', '').lower() == 'application/json':
+                resp_input = r.json()
+            else:
+                resp_input = r.text
+
             if load_as_rick:
                 args = copy.copy(self._init_args)
                 args['load_lambda'] = load_lambda
                 args['deep'] = deep
 
-                return Rickle(json_dict, **args)
+                return Rickle(resp_input, **args)
             else:
-                return json_dict
+                return resp_input
         else:
             raise ValueError(f'Unexpected HTTP status code in response {r.status_code}')
 
-    def add_api_json_call(self,name,
-                      url: str,
-                      http_verb: str = 'GET',
-                      headers: dict = None,
-                      params: dict = None,
-                      body: dict = None,
-                      load_as_rick: bool = False,
-                      deep: bool = False,
-                      load_lambda: bool = False,
-                      expected_http_status: int = 200,
-                      hot_load: bool = False):
-        warnings.warn(message="'add_api_json_call' will be removed after version 1.4. Use 'add_api_json' instead")
-        self.add_api_json(name=name,url=url,http_verb=http_verb,headers=headers,params=params,body=body,
-                          load_as_rick=load_as_rick,deep=deep,load_lambda=load_lambda,
-                          expected_http_status=expected_http_status,hot_load=hot_load)
-    def add_api_json(self, name,
+
+    def add_api(self, name,
                       url: str,
                       http_verb: str = 'GET',
                       headers: dict = None,
@@ -1754,7 +1655,7 @@ class Rickle(BaseRickle):
                 raise ValueError(f"At 'add_api_json_call', when trying to add lambda, this happened {exc}")
 
         else:
-            result = self._load_api_json(url=url,
+            result = self._load_api(url=url,
                                               http_verb=http_verb,
                                               headers=headers,
                                               params=params,
@@ -1766,7 +1667,7 @@ class Rickle(BaseRickle):
 
             self.__dict__.update({name: result})
 
-        self._meta_info[name] = {'type': 'api_json',
+        self._meta_info[name] = {'type': 'api',
                                  'url': url,
                                  'http_verb': http_verb,
                                  'headers': headers,
@@ -2005,7 +1906,7 @@ class UnsafeRickle(Rickle):
                             self.add_base64(name=k,
                                             load=v['load'])
                             continue
-                        if v['type'] == 'file' or v['type'] == 'from_file':
+                        if v['type'] == 'file':
                             self.add_file(name=k,
                                                file_path=v['file_path'],
                                                load_as_rick=v.get('load_as_rick', False),
@@ -2015,15 +1916,15 @@ class UnsafeRickle(Rickle):
                                                encoding=v.get('encoding', 'utf-8'),
                                                hot_load=v.get('hot_load', False))
                             continue
-                        if v['type'] == 'csv' or v['type'] == 'from_csv':
+                        if v['type'] == 'csv' :
                             self.add_csv(name=k,
-                                              file_path=v['file_path'],
+                                              file_path_or_str=v['file_path'],
                                               fieldnames=v.get('fieldnames', None),
                                               load_as_rick=v.get('load_as_rick', False),
                                               encoding=v.get('encoding', 'utf-8'))
                             continue
-                        if v['type'] == 'api_json':
-                            self.add_api_json(name=k,
+                        if v['type'] == 'api':
+                            self.add_api(name=k,
                                                    url=v['url'],
                                                    http_verb=v.get('http_verb', 'GET'),
                                                    headers=v.get('headers', None),
@@ -2034,14 +1935,6 @@ class UnsafeRickle(Rickle):
                                                    deep=v.get('deep', False),
                                                    expected_http_status=v.get('expected_http_status', 200),
                                                    hot_load=v.get('hot_load', False))
-                            continue
-                        if v['type'] == 'html_page':
-                            self.add_html_page(name=k,
-                                               url=v['url'],
-                                               headers=v.get('headers', None),
-                                               params=v.get('params', None),
-                                               expected_http_status=v.get('expected_http_status', 200),
-                                               hot_load=v.get('hot_load', False))
                             continue
                         if v['type'] == 'secret':
                             self.add_secret(name=k,
@@ -2060,27 +1953,7 @@ class UnsafeRickle(Rickle):
                                                   value_properties=v.get('value_properties', dict()),
                                                   hot_load=v.get('hot_load', False))
                             continue
-                        if v['type'] == 'module_import':
-                            safe_load = os.getenv("RICKLE_UNSAFE_LOAD", False)
-                            if init_args and init_args['load_lambda'] and safe_load:
-                                self.add_module_import(name=k,
-                                                       imports=v['import'])
-                            else:
-                                self.__dict__.update({k: v})
-                            continue
-                        if v['type'] == 'class_definition':
-                            name = v.get('name', k)
-                            attributes = v['attributes']
-                            imports = v.get('import', None)
-                            safe_load = os.getenv("RICKLE_UNSAFE_LOAD", False)
-                            if init_args and init_args['load_lambda'] and safe_load:
-                                self.add_class_definition(name=name,
-                                                          attributes=attributes,
-                                                          imports=imports)
-                            else:
-                                self.__dict__.update({k: v})
-                            continue
-                        if v['type'] == 'function':
+                        if v['type'] == 'python':
                             name = v.get('name', k)
                             load = v['load']
                             args_dict = v.get('args', None)
@@ -2089,7 +1962,7 @@ class UnsafeRickle(Rickle):
 
                             safe_load = os.getenv("RICKLE_UNSAFE_LOAD", False)
                             if init_args and init_args['load_lambda'] and safe_load:
-                                self.add_function(name=name,
+                                self.add_python(name=name,
                                                   load=load,
                                                   args=args_dict,
                                                   imports=imports,
@@ -2251,29 +2124,11 @@ class UnsafeRickle(Rickle):
                 d[actual_key] = value
         return d
 
-    def add_module_import(self, name, imports: list):
-        """
-        Add global Python module imports.
-
-        Args:
-            name: Name of import list.
-            imports (list): List of strings of Python module names.
-
-        """
-        name = self._check_kw(name)
-        for i in imports:
-            if 'import' in i:
-                exec(i, globals())
-            else:
-                exec('import {}'.format(i), globals())
-
-        self._meta_info[name] = {'type': 'module_import', 'import': imports}
-
-    def add_function(self, name, load, args: dict = None, imports: list = None,
+    def add_python(self, name, load, args: dict = None, imports: list = None,
                      return_function: bool = False,
                      is_method: bool = False):
         """
-        Add a new function to Rick.
+        Add a new Python function to Rick.
 
         Args:
             name (str): Property name.
@@ -2285,7 +2140,7 @@ class UnsafeRickle(Rickle):
 
         Examples:
             Basic example for adding to a PickleRick:
-                >> test_rick = PickleRick()
+                >> test_rick = UnsafeRickle()
 
                 >> load = '''
                         def tester(x, c):
@@ -2297,7 +2152,7 @@ class UnsafeRickle(Rickle):
 
                 >> imports = ['math']
 
-                >> test_rick.add_function('tester',load, args, imports)
+                >> test_rick.add_python('tester',load, args, imports)
 
                 >> y = test_rick.tester(x=0.66, c=1.6)
 
@@ -2343,210 +2198,55 @@ class UnsafeRickle(Rickle):
             return eval(func_string)
         self.__dict__.update({name: eval(func_string)})
 
-        self._meta_info[name] = {'type': 'function', 'name': name, 'args': args, 'import': imports,
+        self._meta_info[name] = {'type': 'add_python', 'name': name, 'args': args, 'import': imports,
                                  'load': load, 'is_method': is_method}
 
-    def add_class_definition(self, name, attributes, imports: list = None):
-        """
-        Adds a class definition, with attributes such as functions and lambdas.
+T = TypeVar('T')
 
-        Args:
-            name (str): Property name.
-            attributes (dict): Standard items or Rickle function definitions.
-            imports (list): Python modules to import (default = None).
-
-        """
-        name = self._check_kw(name)
-        if imports and isinstance(imports, list):
-            for i in imports:
-                if 'import' in i:
-                    exec(i, globals())
-                else:
-                    exec('import {}'.format(i), globals())
-
-        _attributes = dict()
-        for k, v in attributes.items():
-            if isinstance(v, dict):
-                if 'type' in v.keys() and v['type'] == 'function':
-                    _name = v.get('name', k)
-                    load = v['load']
-                    args_dict = v.get('args', None)
-                    imports = v.get('import', None)
-                    is_method = v.get('is_method', False)
-                    _attributes[_name] = self.add_function(name=_name, load=load, args=args_dict, imports=imports,
-                                                           return_function=True, is_method=is_method)
-                    continue
-            _attributes[k] = v
-
-        self.__dict__.update({name: type(name, (), _attributes)})
-
-        self._meta_info[name] = {'type': 'class_definition', 'name': name, 'import': imports, 'attributes': attributes}
-
-
-class ObjectRickler:
+def object_to_rickle(obj, deep: bool = False, load_lambda: bool = False) -> UnsafeRickle:
     """
-    A class of static methods to help convert Python objects to UnsafeRickle objects, deconstruct objects,
-    create objects from UnsafeRickle objects.
+    Transforms a Python object into a Rickle.
 
-    Notes:
-        - `tuple` types are deconstructed as lists
-        - UnsafeRickle come with security risks
+    Args:
+        obj: Any initialised Python object.
+        deep (bool): Internalize dictionary structures in lists (default = False).
+        load_lambda (bool): Load python code as code or strings (default = False).
 
+    Returns:
+        UnsafeRickle: A constructed UnsafeRickle object.
     """
-    T = TypeVar('T')
+    d = object_to_dict(obj)
+    return UnsafeRickle(d, deep=deep, load_lambda=load_lambda)
 
-    @staticmethod
-    def to_rickle(obj, deep: bool = False, load_lambda: bool = False) -> UnsafeRickle:
-        """
-        Transforms a Python object into a Rickle.
+def rickle_to_object(rickle: UnsafeRickle, cls: T, **args) -> T:
+    """
+    Takes an UnsafeRickle and initialises the class and updates attributes with the ones from the Rickle.
 
-        Args:
-            obj: Any initialised Python object.
-            deep (bool): Internalize dictionary structures in lists (default = False).
-            load_lambda (bool): Load python code as code or strings (default = False).
+    Args:
+        rickle (UnsafeRickle): Rickle to create from.
+        cls (type): The class to initialise from.
 
-        Returns:
-            UnsafeRickle: A constructed UnsafeRickle object.
-        """
-        d = ObjectRickler.deconstruct(obj)
-        return UnsafeRickle(d, deep=deep, load_lambda=load_lambda)
+    Returns:
+        object: Initiliased `cls`.
+    """
+    if len(args) > 0:
+        obj = cls(**args)
+    else:
+        obj = cls()
 
-    @staticmethod
-    def from_rickle(rickle: UnsafeRickle, cls: T, **args) -> T:
-        """
-        Takes an UnsafeRickle and initialises the class and updates attributes with the ones from the Rickle.
+    for name, value in rickle.dict(True).items():
+        if isinstance(value, dict) and 'type' in value.keys():
+            if value['type'] == 'python':
+                _name = value.get('name', name)
+                _load = value['load']
+                _args = value.get('args', None)
+                _import = value.get('import', None)
+                f = rickle.add_python(name=_name, load=_load, args=_args, imports=_import,
+                                        return_function=True, is_method=True)
 
-        Args:
-            rickle (UnsafeRickle): Rickle to create from.
-            cls (type): The class to initialise from.
+                obj.__dict__.update({_name: partial(f, obj)})
+            continue
+        obj.__dict__.update({name: value})
 
-        Returns:
-            object: Initiliased `cls`.
-        """
-        if len(args) > 0:
-            obj = cls(**args)
-        else:
-            obj = cls()
+    return obj
 
-        for name, value in rickle.dict(True).items():
-            if isinstance(value, dict) and 'type' in value.keys():
-                if value['type'] == 'function':
-                    _name = value.get('name', name)
-                    _load = value['load']
-                    _args = value.get('args', None)
-                    _import = value.get('import', None)
-                    f = rickle.add_function(name=_name, load=_load, args=_args, imports=_import,
-                                            return_function=True, is_method=True)
-
-                    obj.__dict__.update({_name: partial(f, obj)})
-                continue
-            obj.__dict__.update({name: value})
-
-        return obj
-
-    @staticmethod
-    def deconstruct(obj, include_imports: bool = False, include_class_source: bool = False,
-                    include_methods: bool = False):
-        """
-        Takes (almost) any Python object and deconstructs it into a dict.
-
-        Args:
-            obj: Any object.
-            include_imports (bool): Add a list of modules to import as is imported in current env (default = False).
-            include_class_source (bool): Add the source of the object's class (default = False).
-            include_methods (bool): Include object methods (default = False).
-
-        Returns:
-            dict: Deconstructed object in typical Rickle dictionary format.
-        """
-
-        def _destruct(value, name=None):
-            pat = re.compile(r'^( )*')
-            if type(value) in (int, float, bool, str):
-                return value
-
-            if isinstance(value, list) or isinstance(value, tuple):
-                new_list = list()
-                for v in value:
-                    new_list.append(_destruct(v))
-                return new_list
-
-            if isinstance(value, dict):
-                new_dict = dict()
-                for k, v in value.items():
-                    new_dict.update({k: _destruct(v)})
-                return new_dict
-
-            if type(value) in (bytes, bytearray):
-                return {
-                    'type': 'base64',
-                    'load': str(base64.b64encode(value))
-                }
-
-            if include_methods and (inspect.ismethod(value) or inspect.isfunction(value)):
-                signature = inspect.signature(value)
-                args = dict()
-                for k, v in dict(signature.parameters).items():
-                    if repr(v.default) == "<class 'inspect._empty'>":
-                        default = None
-                    else:
-                        default = v.default
-                    args.update({
-                        k: default
-                    })
-
-                if len(args) == 0:
-                    args = None
-
-                _source_lines = inspect.getsourcelines(value)[0]
-                match = pat.match(_source_lines[0])
-                s = match.group(0)
-                length = len(s)
-
-                source = _source_lines[0][length:]
-
-                for s in _source_lines[1:]:
-                    source = f'{source}{s[length:]}'
-
-                return {
-                    'type': 'function',
-                    'name': name,
-                    'load': source,
-                    'args': args,
-                    'is_method': inspect.ismethod(value)
-                }
-
-            # Value is an object that needs flattening into dict.
-
-            d = dict()
-
-            if include_class_source:
-                source_lines = inspect.getsource(obj.__class__)
-                d['class_source'] = {
-                    'type': 'class_source',
-                    'load': source_lines
-                }
-
-            if include_imports:
-                imports = list()
-
-                for name, val in globals().items():
-                    if isinstance(val, types.ModuleType):
-                        imports.append(val.__name__)
-
-                if len(imports) > 0:
-                    d['python_modules'] = {
-                        'type': 'module_import',
-                        'import': imports
-                    }
-
-            for _name in dir(value):
-                if _name.startswith('__'):
-                    continue
-                _value = getattr(value, _name)
-
-                d[name] = _destruct(_value, _name)
-
-            return d
-
-        return _destruct(obj)

@@ -1,7 +1,10 @@
+import base64
 import configparser
 import importlib.util
+import inspect
 import random
 import string
+import types
 from enum import Enum
 from typing import List, Union
 from pathlib import Path
@@ -46,6 +49,112 @@ class CLIError(Exception):
 
     def __str__(self):
         return f"{self.cli_tool} {self.message}"
+
+def object_to_dict(obj, include_imports: bool = False, include_class_source: bool = False,
+                include_methods: bool = False):
+    """
+    Takes (almost) any Python object and deconstructs it into a dict.
+
+    Args:
+        obj: Any object.
+        include_imports (bool): Add a list of modules to import as is imported in current env (default = False).
+        include_class_source (bool): Add the source of the object's class (default = False).
+        include_methods (bool): Include object methods (default = False).
+
+    Returns:
+        dict: Deconstructed object in typical Rickle dictionary format.
+    """
+
+    def _destruct(value, name=None):
+        pat = re.compile(r'^( )*')
+        if type(value) in (int, float, bool, str):
+            return value
+
+        if isinstance(value, list) or isinstance(value, tuple):
+            new_list = list()
+            for v in value:
+                new_list.append(_destruct(v))
+            return new_list
+
+        if isinstance(value, dict):
+            new_dict = dict()
+            for k, v in value.items():
+                new_dict.update({k: _destruct(v)})
+            return new_dict
+
+        if type(value) in (bytes, bytearray):
+            return {
+                'type': 'base64',
+                'load': str(base64.b64encode(value))
+            }
+
+        if include_methods and (inspect.ismethod(value) or inspect.isfunction(value)):
+            signature = inspect.signature(value)
+            args = dict()
+            for k, v in dict(signature.parameters).items():
+                if repr(v.default) == "<class 'inspect._empty'>":
+                    default = None
+                else:
+                    default = v.default
+                args.update({
+                    k: default
+                })
+
+            if len(args) == 0:
+                args = None
+
+            _source_lines = inspect.getsourcelines(value)[0]
+            match = pat.match(_source_lines[0])
+            s = match.group(0)
+            length = len(s)
+
+            source = _source_lines[0][length:]
+
+            for s in _source_lines[1:]:
+                source = f'{source}{s[length:]}'
+
+            return {
+                'type': 'function',
+                'name': name,
+                'load': source,
+                'args': args,
+                'is_method': inspect.ismethod(value)
+            }
+
+        # Value is an object that needs flattening into dict.
+
+        d = dict()
+
+        if include_class_source:
+            source_lines = inspect.getsource(obj.__class__)
+            d['class_source'] = {
+                'type': 'class_source',
+                'load': source_lines
+            }
+
+        if include_imports:
+            imports = list()
+
+            for name, val in globals().items():
+                if isinstance(val, types.ModuleType):
+                    imports.append(val.__name__)
+
+            if len(imports) > 0:
+                d['python_modules'] = {
+                    'type': 'module_import',
+                    'import': imports
+                }
+
+        for _name in dir(value):
+            if _name.startswith('__'):
+                continue
+            _value = getattr(value, _name)
+
+            d[name] = _destruct(_value, _name)
+
+        return d
+
+    return _destruct(obj)
 
 def generate_random_value(value_type, value_properties):
     """
@@ -982,7 +1091,7 @@ class Schema:
             if not (null_no_type or null_with_type or non_null):
                 if not no_print:
                     print(
-                        f"Type '{k}' == {cli_bcolors.FAIL}'{object_type}'{cli_bcolors.ENDC},\n Required type {cli_bcolors.OKBLUE}'{schema_type}'{cli_bcolors.ENDC} (per schema {v}),\n In {obj},\n Path {cli_bcolors.WARNING}{new_path}{cli_bcolors.ENDC}")
+                        f"Type '{k}' == {cli_bcolors.FAIL}'{get_native_type_name(object_type, 'json')}'{cli_bcolors.ENDC},\n Required type {cli_bcolors.OKBLUE}'{schema_type}'{cli_bcolors.ENDC} (per schema {v}),\n In {obj},\n Path {cli_bcolors.WARNING}{new_path}{cli_bcolors.ENDC}")
                 return False
 
             return True

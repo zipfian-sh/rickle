@@ -3,7 +3,7 @@ name = "rickle"
 version = "1.2.3"
 description = "Python tools for working with configuration files"
 authors = [
-    { name = "Zipfian Science", email = "about@zipfian.sh" }
+    { name = "Zipfian.sh", email = "about@zipfian.sh" }
 ]
 license = { text = "Apache 2.0" }
 readme = "README.md"
@@ -49,8 +49,8 @@ rickle = "rickle.cli:main"
 [project.urls]
 Homepage = "https://zipfian.science/rickle.html"
 Documentation = "https://zipfian.science/docs/rickle/index.html"
-Repository = "https://github.com/Zipfian-Science/rickled.git"
-Issues = "https://github.com/Zipfian-Science/rickled/issues"
+Repository = "https://github.com/zipfian-sh/rickle"
+Issues = "https://github.com/zipfian-sh/rickle/issues"
 Changelog = "https://zipfian.science/docs/rickle/changelog.html"
 
 [tool.poetry.scripts]
@@ -78,4 +78,7 @@ xmltodict = "^0.14.2"
 py-validator = "^0.21.1"
 myst-parser = "3.0.1"
 sphinx-design = "^0.6.1"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.6.14"
+mkdocstrings = {extras = ["python"], version = "^0.29.1"}
 

@@ -8,11 +8,13 @@ Changelog
 History
 ==========================
 
-Version 1.2.4 (2025-03-25)
+Version 1.2.4 (2025-05-20)
 --------------------------
 
 * Documentation and README cleanup and fixing errors (spelling, examples, etc.).
 * Added ``Basic Auth`` to serve tool.
+* Extending ``find`` by using paths for relative matching.
+* Updating links to new repository.
 
 Version 1.2.3 (2025-03-25)
 --------------------------

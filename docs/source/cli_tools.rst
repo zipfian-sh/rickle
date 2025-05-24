@@ -704,6 +704,28 @@ Outputting the result:
 
    /[1]
 
+Using paths can be used to do relative matching is also possible:
+
+.. code-block:: json
+   :linenos:
+   :caption: arr-dev.jsonl
+   :name: arr-dev-jsonl-2
+
+   {"name": "Lindsay", "surname": "Funke", "score": 29, "details": {"age": 36 }}
+   {"name": "Gob", "surname": "Bluth", "score": 14, "details": {"age": 40 }}
+   {"name": "Tobias", "surname": "Funke", "score": 19, "details": {"age": 45 }}
+   {"name": "Buster", "surname": "Bluth", "score": 25, "details": {"age": 30 }}
+
+.. code-block:: shell
+
+    cat arr-dev.jsonl | rickle obj find --and "surname = Funke" "/details/age = 36" -p
+
+Outputting the result:
+
+.. code-block:: text
+
+   /[0]
+
 Func
 ---------------------
 
@@ -863,6 +885,17 @@ Or alternatively
 
     {"type": "general", "setup": "Why did the girl smear peanut butter on the road?", "punchline": "To go with the traffic jam.", "id": 324}
 
+with the ability to get a specific value from the JSON response, using paths:
+
+.. code-block:: shell
+
+    echo https://official-joke-api.appspot.com/random_joke | rickle --output-type JSON obj get /punchline
+
+printing the fantastic punchline to the setup "The punchline often arrives before the set-up.":
+
+.. code-block:: shell
+
+   Do you know the problem with UDP jokes?
 
 Troubleshooting Obj
 ---------------------
@@ -1100,13 +1133,13 @@ Will print the following if passed:
 
 .. code-block:: shell
 
-   my-example.yaml -> OK
+   INPUT -> OK
 
 Or if failed the test:
 
 .. code-block:: shell
 
-   my-example.yaml -> FAIL
+   INPUT -> FAIL
 
 .. note::
 
@@ -1161,6 +1194,7 @@ Prints the following options:
      --port            port number (default = 8080)
      --private-key     private key file path
      --certificate     ssl certificate file path
+     --auth            basic auth (username:password)
      --load-lambda     load lambda true
      --unsafe          load UnsafeRickle (VERY UNSAFE)
      --browser, -b     open browser
@@ -1346,6 +1380,31 @@ Which will produce the YAML output:
 .. note::
 
    In some browsers, the YAML output will be downloaded as data and not rendered in the browser.
+
+Basic auth
+------------------------
+
+Basic auth can be added by using the ``--auth`` flag with input ``username:password`` or filename (YAML, JSON etc.).
+For example:
+
+.. code-block:: yaml
+   :linenos:
+   :caption: auth-users.yaml
+   :name: auth-users-yaml
+
+   dark-4venger: p@ssword
+   phiberOptik: l33th@xor
+   larry: ken sent me
+
+.. code-block:: shell
+
+   cat mock-example.yaml | rickle serve -b --auth auth-users.yaml
+
+Or just using a single username combination:
+
+.. code-block:: shell
+
+   cat mock-example.yaml | rickle serve -b --auth "user:password"
 
 Unsafe usage
 ------------------------

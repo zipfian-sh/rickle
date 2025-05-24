@@ -128,6 +128,10 @@ class TestBaseRickle(unittest.TestCase):
         result = self.expanded_rickle.search_path("nonexistent")
         self.assertEqual(result, [], "Expected no results for nonexistent search term")
 
+    def test_find(self):
+        # TODO create expanded test
+        pass
+
     def test_callable_with_path(self):
         # Assuming the object can be called like custom_dict("/path/to/value")
         result = self.expanded_rickle("/path/to/value")

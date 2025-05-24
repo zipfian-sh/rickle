@@ -188,7 +188,6 @@ Load multiple files
 ---------------------
 
 We are not limited to only loading configs from one YAML (or JSON) file. Multiple files can be loaded into one ``rickle`` at once.
-Be sure to not have duplicate keys in the same root.
 
 Let's create the same config but split it into two, because we probably have the same DB connection details for all 10 countries.
 
@@ -229,8 +228,8 @@ We can now load both into the same ``rickle``:
     # Load a list of YAML files
     config = BaseRickle(['./db_conf.yaml', './config_SW.yaml'])
 
-    print(config.database.host)
-    print(config.details.version)
+    print(config[0].database.host)
+    print(config[1].details.version)
 
 Again, in this example the root ``APP`` is missing as it is a slightly different example.
 

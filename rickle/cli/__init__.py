@@ -17,7 +17,7 @@ from rickle.cli.conv import conv
 from rickle.cli.serve import serve
 from rickle.cli.obj import obj_get, obj_set, obj_put, obj_del, obj_search, obj_type, obj_func, obj_find
 
-GITHUB_DOCS_URL = "https://github.com/Zipfian-Science/rickled/blob/master/docs/source/cli_tools.rst#cli-tools"
+GITHUB_DOCS_URL = "https://github.com/zipfian-sh/rickle/blob/master/docs/source/cli_tools.rst#cli-tools"
 
 def main():
     supported_list = f"""
@@ -68,6 +68,7 @@ Supported file types ({cli_bcolors.OKBLUE}-t{cli_bcolors.ENDC}) include:
                              metavar='',
                              help=f"output {cli_bcolors.OKBLUE}file type{cli_bcolors.ENDC} (default = input type or YAML)",
                              default=None)
+
 
     subparsers = parser.add_subparsers()
 
@@ -267,23 +268,23 @@ Examples:
     # | |) | _|| |__
     # |___/|___|____|
 
-    del_obj_parser = subparsers_obj.add_parser('del',
+    rm_obj_parser = subparsers_obj.add_parser('rm',
                                                formatter_class=argparse.RawTextHelpFormatter,
-                                               help=f'for {cli_bcolors.OKBLUE}deleting{cli_bcolors.ENDC} keys (paths) in objects',
+                                               help=f'for {cli_bcolors.OKBLUE}removing{cli_bcolors.ENDC} keys (paths) in objects',
                                                description=f"""
-{cli_bcolors.HEADER}Tool for deleting keys (paths) in objects{cli_bcolors.ENDC}.
+{cli_bcolors.HEADER}Tool for removing keys (paths) in objects{cli_bcolors.ENDC}.
 
 Examples: 
 
-    $ cat config.yaml | rickle obj del /path/to 
+    $ cat config.yaml | rickle obj rm /path/to 
 """, )
 
-    del_obj_parser.add_argument('key',
+    rm_obj_parser.add_argument('key',
                                 type=str,
                                 help=f"{cli_bcolors.OKBLUE}key{cli_bcolors.ENDC} to delete",
                                 metavar='key')
 
-    del_obj_parser.set_defaults(func=obj_del)
+    rm_obj_parser.set_defaults(func=obj_del)
 
     #################### OBJ - TYPE #####################
     #  _______   _____ ___
@@ -374,7 +375,7 @@ Only the following --output-type is allowed: YAML, JSON, and ARRAY (default). Us
 Examples: 
 
     $ cat config.yaml | rickle obj find "key=value"
-    $ cat config.yaml | rickle obj find --or "threshold < 0.2" "threshold > 0.8"
+    $ cat config.yaml | rickle obj find --or "threshold < 0.2" "/mean/param_one > 0.8"
     $ cat config.yaml | rickle obj find --and "threshold gt 0.2" "threshold lt 0.8" -p
 
 Only the following --output-type is allowed: YAML, JSON, and ARRAY (default). Using ARRAY will only print the path(s).
@@ -745,7 +746,7 @@ If --input or --input-directory are passed the output will be to files. If piped
         elif cli_exc.cli_tool == CLIError.CLITool.OBJ_SET:
             set_obj_parser.print_help(sys.stderr)
         elif cli_exc.cli_tool == CLIError.CLITool.OBJ_DEL:
-            del_obj_parser.print_help(sys.stderr)
+            rm_obj_parser.print_help(sys.stderr)
         elif cli_exc.cli_tool == CLIError.CLITool.OBJ_TYPE:
             type_obj_parser.print_help(sys.stderr)
         elif cli_exc.cli_tool == CLIError.CLITool.OBJ_SEARCH:
