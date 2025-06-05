@@ -216,6 +216,44 @@ root:
 
     In some browsers, the YAML output will be downloaded as data and not rendered in the browser.
 
+### `PUT` new data
+
+New data can be put using a path and any input data of type YAML, JSON, TOML, or XML.
+
+```shell
+cat mock-example.yaml | rickle serve
+```
+
+Then running `curl` with `PUT`:
+
+```shell
+curl -X PUT http://localhost:8080/root/new_path -d '{"any_data":3.14}'
+```
+
+This will create at the new document path `/root/new_path` an object `any_data:3.14`. 
+Of course this means that the value `3.14` exists at `/root/new_path/any_data` as the input data is read and is accessible as:
+
+```shell
+curl http://localhost:8080/root/new_path/any_data
+```
+
+Furthermore, YAML, TOML, XML, INI, and ENV inputs are support:
+
+```shell
+curl -X PUT http://localhost:8080/root/new_ini < path/to/file.ini
+curl -X PUT http://localhost:8080/root/new_toml < other/to/file.xml
+```
+
+### Set `X-rickle-output-type` header
+
+The output type can be set with each `GET` request. Say for example you want the output in TOML:
+
+```shell
+curl.exe http://localhost:8080/ --header "X-rickle-output-type: toml"
+```
+
+Will respond with TOML.
+
 ---
 
 ## SSL and Auth

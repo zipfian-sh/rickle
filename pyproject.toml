@@ -1,6 +1,6 @@
 [project]
 name = "rickle"
-version = "1.2.3"
+version = "1.2.4"
 description = "Python tools for working with configuration files"
 authors = [
     { name = "Zipfian.sh", email = "about@zipfian.sh" }
@@ -47,17 +47,15 @@ full = [
 rickle = "rickle.cli:main"
 
 [project.urls]
-Homepage = "https://zipfian.science/rickle.html"
-Documentation = "https://zipfian.science/docs/rickle/index.html"
+Homepage = "https://zipfian.sh/projects/rickle.html"
+Documentation = "https://zipfian.sh/docs/rickle/"
 Repository = "https://github.com/zipfian-sh/rickle"
 Issues = "https://github.com/zipfian-sh/rickle/issues"
-Changelog = "https://zipfian.science/docs/rickle/changelog.html"
+Changelog = "https://zipfian.sh/docs/rickle/changelog/"
 
 [tool.poetry.scripts]
-unittest = 'deploy:all_unit_tests'
-docs = 'deploy:build_documentation'
-bumpver = 'deploy:bump_version_patch'
-uploaddocs = 'deploy:upload_docs_via_ftp'
+unittest = 'build_utils:all_unit_tests'
+bumpver = 'build_utils:bump_version_patch'
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -65,10 +63,6 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.poetry.group.dev.dependencies]
-sphinx = "7.4.7"
-sphinxcontrib-napoleon = "^0.7"
-sphinx-book-theme = "^1.1.3"
-sphinx-copybutton = "^0.5.2"
 jsonschema = "^4.23.0"
 coverage = "^7.6.10"
 pyopenssl = "^25.0.0"
@@ -76,8 +70,6 @@ twisted = "^24.11.0"
 python-dotenv = "^1.0.1"
 xmltodict = "^0.14.2"
 py-validator = "^0.21.1"
-myst-parser = "3.0.1"
-sphinx-design = "^0.6.1"
 mkdocs = "^1.6.1"
 mkdocs-material = "^9.6.14"
 mkdocstrings = {extras = ["python"], version = "^0.29.1"}

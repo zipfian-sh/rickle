@@ -8,14 +8,12 @@ import sys
 import rickle.__version__ as ver
 import argparse
 from rickle.tools import cli_bcolors
-from rickle.tools import Schema
-from rickle.tools import Converter
 from rickle.tools import CLIError
 
 from rickle.cli.schema import gen, check
 from rickle.cli.conv import conv
 from rickle.cli.serve import serve
-from rickle.cli.obj import obj_get, obj_set, obj_put, obj_rm, obj_search, obj_type, obj_func, obj_find
+from rickle.cli.obj import obj_get, obj_set, obj_put, obj_rm, obj_search, obj_type, obj_python_func, obj_find
 
 GITHUB_DOCS_URL = "https://github.com/zipfian-sh/rickle/blob/master/docs/source/cli_tools.rst#cli-tools"
 
@@ -42,6 +40,7 @@ def main():
 ██╔══██╗██║██║     ██╔═██╗ ██║     ██╔══╝  
 ██║  ██║██║╚██████╗██║  ██╗███████╗███████╗
 ╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝{cli_bcolors.ENDC}
+
 
 {cli_bcolors.HEADER}YAML (+JSON, TOML...) tools for Python{cli_bcolors.ENDC} (version {ver}).
 ---------------------------------------------------------------------------------------------
@@ -94,9 +93,6 @@ Examples:
 When no output type is defined, the file extension (suffix) is used to infer the output type.    
 
     $ rickle conv --input conf1.yaml --output config.toml
-
-Supported formats: 
-{Converter.supported}
     """)
 
     parser_conv.add_argument('--input',
@@ -426,9 +422,9 @@ being executed and then the later. Using --parent / -p will output the parent no
     # | _|| |_| | .` | (__
     # |_|  \___/|_|\_|\___|
 
-    func_obj_parser = subparsers_obj.add_parser('func',
+    func_obj_parser = subparsers_obj.add_parser('pyfunc',
                                                 formatter_class=argparse.RawTextHelpFormatter,
-                                                help=f'executing {cli_bcolors.OKBLUE}functions{cli_bcolors.ENDC} defined in objects',
+
                                                 description=f"""
 {cli_bcolors.HEADER}Tool for executing functions defined in objects{cli_bcolors.ENDC}.
 To enable unsafe usage, the environment variable {cli_bcolors.WARNING}RICKLE_UNSAFE_LOAD{cli_bcolors.ENDC} must be set and {cli_bcolors.WARNING}--load-lambda{cli_bcolors.ENDC} passed.  
@@ -472,7 +468,7 @@ This will infer input params.
                                  help=f"{cli_bcolors.OKBLUE}params{cli_bcolors.ENDC} for function",
                                  metavar='params', nargs='+')
 
-    func_obj_parser.set_defaults(func=obj_func)
+    func_obj_parser.set_defaults(func=obj_python_func)
 
     #################### SERVE #####################
     # ░░      ░░        ░       ░░  ░░░░  ░        ░
@@ -595,8 +591,6 @@ Unsafe usage like functions can be enabled:
                                           description=f"""
 {cli_bcolors.HEADER}Tool for generating and checking schemas of several different formats{cli_bcolors.ENDC}.
 
-Supported formats: 
-{Schema.supported}
 """, )
 
     schema_subparsers = parser_schema.add_subparsers()
@@ -636,7 +630,7 @@ See {cli_bcolors.UNDERLINE}https://python-jsonschema.readthedocs.io{cli_bcolors.
     parser_schema_check.add_argument('--input-directory',
                                      type=str,
                                      dest='INPUT_DIRECTORY',
-                                     help=f"{cli_bcolors.OKBLUE}directory{cli_bcolors.ENDC}(s) of files to check",
+                                     help=f"glob {cli_bcolors.OKBLUE}directory{cli_bcolors.ENDC} of files to check",
                                      default=None,
                                      metavar='')
 
@@ -703,12 +697,6 @@ If --input or --input-directory are passed the output will be to files. If piped
                                    type=str,
                                    help=f"{cli_bcolors.OKBLUE}output file{cli_bcolors.ENDC}(s) to write to",
                                    nargs='+',
-                                   metavar='')
-    parser_schema_gen.add_argument('--input-directory',
-                                   dest='INPUT_DIRECTORY',
-                                   type=str,
-                                   help=f"{cli_bcolors.OKBLUE}directory{cli_bcolors.ENDC}(s) of files to generate from",
-                                   default=None,
                                    metavar='')
     parser_schema_gen.add_argument('--silent',
                                    '-s',

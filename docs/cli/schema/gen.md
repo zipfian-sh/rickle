@@ -20,7 +20,6 @@ optional arguments:
  -h, --help          show this help message and exit
  --input  [ ...]     input file(s) to generate from
  --output  [ ...]    output file(s) to write to
- --input-directory   directory(s) of files to generate from
  --silent, -s        silence output
  --extras, -e        include extra properties
 ```

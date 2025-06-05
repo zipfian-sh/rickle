@@ -1,21 +1,21 @@
 # rickle - Smart Python tools for working with Configs
 
-![PyPI - Version](https://img.shields.io/pypi/v/rickled)
-[![Downloads](https://static.pepy.tech/badge/rickled)](https://pepy.tech/project/rickled)
-[![Downloads](https://static.pepy.tech/badge/rickled/month)](https://pepy.tech/project/rickled)
+![PyPI - Version](https://img.shields.io/pypi/v/rickle)
+[![Downloads](https://static.pepy.tech/badge/rickle)](https://pepy.tech/project/rickle)
+[![Downloads](https://static.pepy.tech/badge/rickle/month)](https://pepy.tech/project/rickle)
 [![General badge](https://img.shields.io/badge/Coverage-75+-<COLOR>.svg)](https://zipfian.science/docs/rickle/coverage/index.html)
 
 ---
 
-```
+```                                                                
 ██████╗ ██╗ ██████╗██╗  ██╗██╗     ███████╗
 ██╔══██╗██║██╔════╝██║ ██╔╝██║     ██╔════╝
 ██████╔╝██║██║     █████╔╝ ██║     █████╗  
 ██╔══██╗██║██║     ██╔═██╗ ██║     ██╔══╝  
 ██║  ██║██║╚██████╗██║  ██╗███████╗███████╗
 ╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝
-                                           
-by Zipfian Science                               
+                                                                                                                       
+by Zipfian.sh                             
 ```
 
 ---
@@ -520,4 +520,4 @@ Please review some of the practices stated in [CONTRIBUTIONS.md](https://github.
 
 ---
 
-© [Zipfian Science](https://zipfian.science) 2020 - 2025
+© [Zipfian.sh](https://zipfian.sh) 2020 - 2025

@@ -782,6 +782,8 @@ class BaseRickle:
         if not isinstance(current_node, self.__class__):
             raise NameError(f'The path {key} could not be set, try using put')
 
+        if isinstance(value, dict):
+            value = self.__class__(value)
         if current_node.has(path_list[-1]):
             current_node[path_list[-1]] = value
         else:
@@ -938,20 +940,20 @@ class BaseRickle:
         if output:
             if isinstance(output, TextIOWrapper):
                 if self._input_type == "array":
-                    yaml.safe_dump_all(self_as_primitive, stream=output, encoding=encoding)
+                    yaml.safe_dump_all(self_as_primitive, stream=output, encoding=encoding, sort_keys=False)
                 else:
-                    yaml.safe_dump(self_as_primitive, stream=output, encoding=encoding)
+                    yaml.safe_dump(self_as_primitive, stream=output, encoding=encoding, sort_keys=False)
             elif isinstance(output, str):
                 with open(output, 'w', encoding=encoding) as fs:
                     if self._input_type == "array":
-                        yaml.safe_dump_all(self_as_primitive, fs)
+                        yaml.safe_dump_all(self_as_primitive, fs, sort_keys=False)
                     else:
-                        yaml.safe_dump(self_as_primitive, fs)
+                        yaml.safe_dump(self_as_primitive, fs, sort_keys=False)
         else:
             if self._input_type == "array":
-                return yaml.safe_dump_all(self_as_primitive, stream=None, encoding=encoding).decode(encoding)
+                return yaml.safe_dump_all(self_as_primitive, stream=None, encoding=encoding, sort_keys=False).decode(encoding)
             else:
-                return yaml.safe_dump(self_as_primitive, stream=None, encoding=encoding).decode(encoding)
+                return yaml.safe_dump(self_as_primitive, stream=None, encoding=encoding, sort_keys=False).decode(encoding)
 
     def to_json(self, output: Union[str, TextIOWrapper] = None, serialised: bool = False, encoding: str = 'utf-8', lines: bool = True):
         """
@@ -1134,7 +1136,7 @@ class BaseRickle:
 
 class Rickle(BaseRickle):
     """
-        An extended version of the BasicRick that can load OS environ variables and Python functions.
+        An extended version of the BaseRick that can load OS environ variables and secrets.
 
         Args:
             base (str, list): String (YAML or JSON, file path to YAML/JSON file) or list of file paths, text IO stream, dict.
@@ -1894,6 +1896,22 @@ class Rickle(BaseRickle):
 
 
 class UnsafeRickle(Rickle):
+    """
+        An UNSAFE extended version of the Rick that can load Python functions.
+
+        Args:
+            base (str, list): String (YAML or JSON, file path to YAML/JSON file) or list of file paths, text IO stream, dict.
+            deep (bool): Internalize dictionary structures in lists.
+            load_lambda (bool): Load lambda as code or strings.
+            strict (bool): Check keywords, if YAML/JSON key is Rickle keyword (or member of object) raise ValueError (default = True).
+            **init_args (kw_args): Additional arguments for string replacement
+
+        Raises:
+            ValueError: If the given base object can not be handled. Also raises if YAML key is already member of Rickle.
+
+        Warning:
+            Loading unknown Python code could pose security risks. Only use this if you are aware of the risks and only load code you authored!
+    """
 
     def _iternalize(self, obj: dict, deep: bool, **init_args):
         if isinstance(obj, dict):
@@ -2007,11 +2025,11 @@ class UnsafeRickle(Rickle):
         Rickle objects can be queried via a path string.
 
         Notes:
-            '/' => root.
-            '/name' => member.
-            '/path/to/name?param=1' => lambda/function.
-            '/name/[0]' => for lists.
-            If '?' is in path the inline parameters are used and kwargs are ignored.
+            - '/' = root.
+            - '/name' = member.
+            - '/path/to/name?param=1' = lambda/function.
+            - '/name/[0]' = for lists.
+            - If '?' is in path the inline parameters are used and kwargs are ignored.
 
         Args:
             path (str): The path as a string, down to the last mentioned node.

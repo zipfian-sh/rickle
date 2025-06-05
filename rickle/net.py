@@ -8,6 +8,7 @@ import yaml
 import tomli_w as tomlw
 
 from rickle import BaseRickle, toml_null_stripper, __version__ as rickle_version
+from rickle.tools import infer_read_string_type
 
 try:
     from twisted.web import server, resource
@@ -30,6 +31,29 @@ class HttpResource(resource.Resource):
         self.basic_auth = basic_auth
         super().__init__()
 
+    def render_PUT(self, request):
+
+        request.setHeader(b"server", f"rickle/{rickle_version}".encode("utf-8"))
+        if self.basic_auth:
+            user = request.getUser().decode("utf-8")
+            password = request.getPassword().decode("utf-8")
+
+            if not user in self.basic_auth.keys() or password != self.basic_auth[user]:
+                request.setHeader('WWW-Authenticate', 'Basic')
+                request.setResponseCode(http.UNAUTHORIZED)
+
+                return f"<html><h1>401 Authorization Required</h1></html>".encode("utf-8")
+
+        uri = request.uri.decode("utf-8")
+
+        content = infer_read_string_type(request.content.read())
+
+        self.rickle.put(uri, content)
+
+        request.setHeader(b"content-type", b"text/plain")
+
+        return "OK".encode("utf-8")
+
     def render_GET(self, request):
 
         request.setHeader(b"server", f"rickle/{rickle_version}".encode("utf-8"))
@@ -44,6 +68,12 @@ class HttpResource(resource.Resource):
                 return f"<html><h1>401 Authorization Required</h1></html>".encode("utf-8")
 
         uri = request.uri.decode("utf-8")
+
+        output_type = request.getHeader(b"x-rickle-output-type")
+        if output_type is None:
+            output_type = self.output_type
+        else:
+            output_type = output_type.decode("utf-8")
 
 
         try:
@@ -62,33 +92,36 @@ class HttpResource(resource.Resource):
         request.setResponseCode(200)
         try:
             if isinstance(content, BaseRickle):
-                if self.output_type == 'yaml':
+                if output_type == 'yaml':
                     request.setHeader(b"content-type", b"application/yaml")
                     response = content.to_yaml(serialised=self.serialised)
-                elif self.output_type == 'toml':
+                elif output_type == 'toml':
                     request.setHeader(b"content-type", b"application/toml")
                     response = content.to_toml(serialised=self.serialised)
-                elif self.output_type == 'xml' and importlib.util.find_spec('xmltodict'):
+                elif output_type == 'xml' and importlib.util.find_spec('xmltodict'):
                     request.setHeader(b"content-type", b"text/xml")
                     response = content.to_xml(serialised=self.serialised)
                 else:
                     request.setHeader(b"content-type", b"application/json")
                     response = content.to_json(serialised=self.serialised)
             elif isinstance(content, dict) or isinstance(content, list):
-                if self.output_type == 'yaml':
+                if output_type == 'yaml':
                     request.setHeader(b"content-type", b"application/yaml")
                     response = yaml.safe_dump(content)
-                elif self.output_type == 'toml':
+                elif output_type == 'toml':
                     request.setHeader(b"content-type", b"application/toml")
                     if isinstance(content, dict):
                         content = toml_null_stripper(content)
                     response = tomlw.dumps(content)
-                elif self.output_type == 'xml' and importlib.util.find_spec('xmltodict'):
-                    import xmltodict
-                    request.setHeader(b"content-type", b"text/xml")
-                    if isinstance(content, list):
-                        raise ValueError("List can not be dumped as XML.")
-                    response = xmltodict.unparse(input_dict=content, pretty=True)
+                elif output_type == 'xml':
+                    if importlib.util.find_spec('xmltodict'):
+                        import xmltodict
+                        request.setHeader(b"content-type", b"text/xml")
+                        if isinstance(content, list):
+                            raise ValueError("List can not be dumped as XML.")
+                        response = xmltodict.unparse(input_dict=content, pretty=True)
+                    else:
+                        raise ModuleNotFoundError("Python package xmltodict not installed, can not dump to XML!")
                 else:
                     request.setHeader(b"content-type", b"application/json")
                     response = json.dumps(content)
@@ -118,7 +151,8 @@ def serve_rickle_http(rickle,
                        output_type: str = 'json',
                        path_to_private_key: str = None,
                        path_to_certificate: str = None,
-                       basic_auth: dict = None):
+                       basic_auth: dict = None,
+                       threaded: bool = False):
     log.startLogging(sys.stdout)
     site = server.Site(HttpResource(rickle, serialised=serialised, output_type=output_type, basic_auth=basic_auth))
 
@@ -131,4 +165,4 @@ def serve_rickle_http(rickle,
     else:
         reactor.listenTCP(port, site, interface=interface)
 
-    reactor.run()
+    reactor.run(installSignalHandlers=not threaded)

@@ -17,7 +17,7 @@ icon: octicons/history-16
 ## History
 
 
-### Version 1.3.0 (2025-05-20)
+### Version 1.2.4 (2025-06-05)
 
 - Documentation and README cleanup and fixing errors (spelling, examples, etc.).
 - Added ``Basic Auth`` to serve tool.
@@ -30,7 +30,11 @@ icon: octicons/history-16
 - ``RICKLE_OPENING_BRACES`` and ``RICKLE_CLOSING_BRACES`` dropped in favor of single ``RICKLE_HANDLEBARS`` with default ``{{}}``.
 - Remove `from_file`, `from_csv`, `api_json` in favour of `file`, `csv`, `api`.
 - Dropped `add_html` as the same could be achieved through `api`.
-- 
+- Removed ``Schema`` and ``Convert`` classes from ``tools``.
+- Created new `schema` package to contain all schema related functionality.
+- Renamed CLI tool `obj_func` to `obj_python_func` to reflect future changes.
+- Added `PUT` method to `serve` tool to now be able to create new paths with values.
+- Added `x-rickle-output-type` header to `serve` so that different output types can be requested. 
 
 ### Version 1.2.3 (2025-03-25)
 

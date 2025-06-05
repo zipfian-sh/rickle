@@ -30,7 +30,6 @@ positional arguments:
        type                Printing value type
        search              For searching keys (paths) in objects
        find                For finding key/value (paths) in objects
-       func                Executing functions defined in objects
 
    optional arguments:
      -h, --help            show this help message and exit

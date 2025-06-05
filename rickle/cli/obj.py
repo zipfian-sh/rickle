@@ -38,7 +38,7 @@ def obj_get(args):
             if args.OUTPUT:
                 if dump_type in ['yaml', 'object', 'array']:
                     with open(args.OUTPUT, 'w') as fp:
-                        yaml.safe_dump(v, fp)
+                        yaml.safe_dump(v, fp, sort_keys=False)
                 elif dump_type in ['json', 'url']:
                     with open(args.OUTPUT, 'w') as fp:
                         json.dump(v, fp)
@@ -71,7 +71,7 @@ def obj_get(args):
 
             else:
                 if dump_type in ['yaml', 'object', 'array']:
-                    print(yaml.safe_dump(v))
+                    print(yaml.safe_dump(v, sort_keys=False))
                 elif dump_type in ['json', 'url']:
                     print(json.dumps(v))
                 elif dump_type == 'toml':
@@ -274,7 +274,7 @@ def obj_search(args):
             if dump_type == 'json':
                 print(json.dumps(paths))
             elif dump_type == 'yaml':
-                print(yaml.safe_dump(paths))
+                print(yaml.safe_dump(paths, sort_keys=False))
             elif dump_type in ['list', 'array']:
                 for p in paths:
                     print(p)
@@ -354,7 +354,7 @@ def obj_find(args):
             if dump_type == 'json':
                 print(json.dumps(paths))
             elif dump_type == 'yaml':
-                print(yaml.safe_dump(paths))
+                print(yaml.safe_dump(paths, sort_keys=False))
             elif dump_type in ['list', 'array']:
                 for p in paths:
                     print(p)
@@ -365,7 +365,7 @@ def obj_find(args):
     except Exception as exc:
         raise CLIError(message=str(exc), cli_tool=CLIError.CLITool.OBJ_FIND)
 
-def obj_func(args):
+def obj_python_func(args):
     def guess_parse(param_value):
         try:
             return ast.literal_eval(param_value)
@@ -441,7 +441,7 @@ def obj_func(args):
                         raise CLIError(f"Unsupported dump type {dump_type}", cli_tool=CLIError.CLITool.OBJ_FUNC)
                 elif isinstance(v, dict):
                     if dump_type in ['yaml', 'object', 'array']:
-                        print(yaml.safe_dump(v))
+                        print(yaml.safe_dump(v, sort_keys=False))
                     elif dump_type in ['json', 'url']:
                         print(json.dumps(v))
                     elif dump_type == 'toml':

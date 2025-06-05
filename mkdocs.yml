@@ -5,6 +5,8 @@ site_description: Documentation for using rickle, an all purpose configuration m
 copyright: Copyright &copy; 2020 - 2025 - zipfian.sh
 theme:
   name: material
+  logo: rickle_logo.png
+  favicon: rickle_logo.png
   palette:
     # Palette toggle for light mode
     - scheme: default
@@ -59,6 +61,7 @@ nav:
     - 'api/index.md'
     - Rickle: 'api/rickle.md'
     - Tools: 'api/tools.md'
+    - Schema: 'api/schema.md'
   - CLI:
     - Getting started: 'cli/index.md'
     - Conversion: 'cli/conv.md'
