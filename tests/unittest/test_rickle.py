@@ -93,13 +93,9 @@ class TestBaseRickle(unittest.TestCase):
         self.rickle.add_file("bowser", './tests/placebos/6D6172696F.txt')
         self.assertTrue(self.rickle.get("bowser").startswith("d061"))
 
-    def test_add_html_page(self):
 
-        self.rickle.add_html_page("html_content", "https://zipfian.science/")
-        self.assertTrue('<title>Zipfian Science</title>' in self.rickle.get("html_content"))
-
-    def test_add_api_json(self):
-        self.rickle.add_api_json("api_result", "https://official-joke-api.appspot.com/random_joke")
+    def test_add_api(self):
+        self.rickle.add_api("api_result", "https://official-joke-api.appspot.com/random_joke", load_as_rick=True)
         keys = self.rickle.get("api_result").keys()
         self.assertTrue('type' in keys)
         self.assertTrue('setup' in keys)

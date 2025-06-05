@@ -1,21 +1,21 @@
 # rickle - Smart Python tools for working with Configs
 
-![PyPI - Version](https://img.shields.io/pypi/v/rickled)
-[![Downloads](https://static.pepy.tech/badge/rickled)](https://pepy.tech/project/rickled)
-[![Downloads](https://static.pepy.tech/badge/rickled/month)](https://pepy.tech/project/rickled)
+![PyPI - Version](https://img.shields.io/pypi/v/rickle)
+[![Downloads](https://static.pepy.tech/badge/rickle)](https://pepy.tech/project/rickle)
+[![Downloads](https://static.pepy.tech/badge/rickle/month)](https://pepy.tech/project/rickle)
 [![General badge](https://img.shields.io/badge/Coverage-75+-<COLOR>.svg)](https://zipfian.science/docs/rickle/coverage/index.html)
 
 ---
 
-```
+```                                                                
 ██████╗ ██╗ ██████╗██╗  ██╗██╗     ███████╗
 ██╔══██╗██║██╔════╝██║ ██╔╝██║     ██╔════╝
 ██████╔╝██║██║     █████╔╝ ██║     █████╗  
 ██╔══██╗██║██║     ██╔═██╗ ██║     ██╔══╝  
 ██║  ██║██║╚██████╗██║  ██╗███████╗███████╗
 ╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝
-                                           
-by Zipfian Science                               
+                                                                                                                       
+by Zipfian.sh                             
 ```
 
 ---
@@ -51,7 +51,7 @@ Documentation can be [found here](https://zipfian.science/docs/rickle/index.html
 First install the tool (Python version >= 3.9):
 
 ```bash script
-$ pip install rickle
+pip install rickle
 ```
 ---
 ### 1.1 Extras
@@ -59,37 +59,37 @@ $ pip install rickle
 Optionally the twisted web server can be installed alongside for the `serve` functionality.
 
 ```bash script
-$ pip install rickle[net]
+pip install rickle[net]
 ```
 
 For expanded schema validators.
 
 ```bash script
-$ pip install rickle[validators]
+pip install rickle[validators]
 ```
 
 For xml support.
 
 ```bash script
-$ pip install rickle[xml]
+pip install rickle[xml]
 ```
 
 For .env file support.
 
 ```bash script
-$ pip install rickle[dotenv]
+pip install rickle[dotenv]
 ```
 
-For a fully featured install.
+For a fully featured installation.
 
 ```bash script
-$ pip install rickle[full]
+pip install rickle[full]
 ```
 
 Check if the installation succeeded:
 
 ```bash script
-$ rickle --help
+rickle --help
 ```
 
 ## 2. And use
@@ -141,18 +141,22 @@ Two main schema tools exist, the `check` and the `gen` tools.
 For checking the schema of input files, the `check` tool is used.
 
 ```bash script
-$ rickle schema check --help
+rickle schema check --help
 ```
 
 ```bash script
-$ rickle schema check --input test.yaml --schema schema.yaml 
+rickle schema check --input test.yaml --schema schema.yaml 
 ```
 
 OR
 
 ```bash script
-$ cat test.yaml | rickle schema check --schema schema.yaml 
+cat test.yaml | rickle schema check --schema schema.yaml 
 ```
+
+> [!TIP]
+> To do a [jsonschema](https://pypi.org/project/jsonschema/) check (if installed), use `--json-schema` or `-j`.
+
 
 ---
 
@@ -161,11 +165,11 @@ $ cat test.yaml | rickle schema check --schema schema.yaml
 Schema files can be generated from YAML files with the `gen` tool.
 
 ```bash script
-$ rickle schema gen --help
+rickle schema gen --help
 ```
 
 ```bash script
-$ rickle schema gen --input test.yaml
+rickle schema gen --input test.yaml
 ```
 
 This will generate a schema file called `test.schema.yaml`.
@@ -173,7 +177,7 @@ This will generate a schema file called `test.schema.yaml`.
 OR
 
 ```bash script
-$ cat test.yaml | rickle schema --output-type json gen
+cat test.yaml | rickle schema --output-type json gen
 ```
 
 This will generate a schema and print the output, in this example in JSON.
@@ -185,20 +189,20 @@ This will generate a schema and print the output, in this example in JSON.
 `rickle` can also be used for bulk conversion from YAML to JSON or the other way around.
 
 ```bash script
-$ rickle conv --help
+rickle conv --help
 ```
 
 To convert input files (or directories):
 
 ```bash script
-$ rickle conv --input test.yaml --output test.json
+rickle conv --input test.yaml --output test.json
 ```
 
 For each input file the output file can be defined and the path suffix is used to infer the desired output type.
 Using input and output will read and write to files. Alternatively:
 
 ```bash script
-$ cat text.yaml | rickle --output-type json conv 
+cat text.yaml | rickle --output-type json conv 
 ```
 
 The output type can be specified with the `--output-type` flag.
@@ -213,25 +217,25 @@ document paths. This is done using the object tool `obj`.
 To see more:
 
 ```bash script
-$ rickle obj --help
+rickle obj --help
 ```
 ```bash script
-$ rickle obj get --help
+rickle obj get --help
 ```
 ```bash script
-$ rickle obj set --help
+rickle obj set --help
 ```
 ```bash script
-$ rickle obj put --help
+rickle obj put --help
 ```
 ```bash script
-$ rickle obj del --help
+rickle obj del --help
 ```
 ```bash script
-$ rickle obj search --help
+rickle obj search --help
 ```
 ```bash script
-$ rickle obj find --help
+rickle obj find --help
 ```
 ---
 
@@ -268,37 +272,47 @@ values:
   - three
 ```
 
-> **_NOTE:_**  It is possible to change the path separator by setting the env variable `RICKLE_PATH_SEP`.
+> [!NOTE]
+> It is possible to change the path separator by setting the env variable `RICKLE_PATH_SEP`.
 
 ---
 
 ### 5.2 Get
 
 ```bash script
-$ rickle obj --input test.yaml get /
+rickle obj --input test.yaml get /
 ```
 
 OR
 
 ```bash script
-$ cat test.yaml | rickle obj get /
+cat test.yaml | rickle obj get /
 ```
 
 This will output the entire test.yaml. If the path, using the above example with path `/path/to/values/[0]`, the output will 
 simply be `one`.
+
+> [!TIP]
+> Use rickle as an cURL alternative.
+
+Example using url:
+
+```bash script
+echo https://official-joke-api.appspot.com/random_joke | rickle obj get /
+```
 
 ---
 
 ### 5.2 Set
 
 ```bash script
-$ rickle obj --input test.yaml set /path/to/values/[1] foo
+rickle obj --input test.yaml set /path/to/values/[1] foo
 ```
 
 OR
 
 ```bash script
-$ cat test.yaml | rickle obj set /path/to/values/[1] foo
+cat test.yaml | rickle obj set /path/to/values/[1] foo
 ```
 
 will output the following: 
@@ -321,13 +335,13 @@ path:
 ### 5.3 Put
 
 ```bash script
-$ rickle obj --input test.yaml put /path/to/non/existing bar
+rickle obj --input test.yaml put /path/to/non/existing bar
 ```
 
 OR
 
 ```bash script
-$ cat test.yaml | rickle put /path/to/non/existing bar
+cat test.yaml | rickle put /path/to/non/existing bar
 ```
 
 will output the following: 
@@ -362,13 +376,13 @@ path:
 Document paths can be searched:
 
 ```bash script
-$ rickle obj --input test.yaml search key
+rickle obj --input test.yaml search key
 ```
 
 OR
 
 ```bash script
-$ cat test.yaml | rickle obj search key
+cat test.yaml | rickle obj search key
 ```
 
 Will output the following (in YAML):
@@ -381,7 +395,7 @@ Will output the following (in YAML):
 Different output types are passed with the `--output-type` flag, including the `array` type to print paths as lines. 
 
 ```bash script
-$ cat test.yaml | rickle --output-type list obj search key
+cat test.yaml | rickle --output-type list obj search key
 ```
 
 Will instead output the following:
@@ -427,6 +441,10 @@ cat arr-dev.jsonl | rickle obj find --and "score > 14" "score < 20"
 cat arr-dev.jsonl | rickle obj find --and "surname = Bluth" "score < 20" -p
 ```
 
+> [!TIP]
+> Use `-p` to output the parent node, making it easier to use multi conditions.
+
+
 ---
 
 ## 6. Serving via HTTP(s)
@@ -435,17 +453,17 @@ A nifty little use of this Python tool is the ability to host a webserver, using
 For this functionality to work the "net" extras need to be installed, `pip install rickel[net]`.  
  
 ```bash script
-$ rickle serve --help
+rickle serve --help
 ```
 
 ```bash script
-$ rickle serve --input basic_example.yaml
+rickle serve --input basic_example.yaml
 ```
 
 OR
 
 ```bash script
-$ cat basic_example.yaml | rickle serve
+cat basic_example.yaml | rickle serve
 ```
 
 This will start listening on http://localhost:8080, for requests using `GET`. 
@@ -453,7 +471,7 @@ This will start listening on http://localhost:8080, for requests using `GET`.
 Alternatively serve through SSL:
 
 ```bash script
-$ cat basic_example.yaml | rickle serve --certificate ./certificate.crt --private-key ./privkey.pem
+cat basic_example.yaml | rickle serve --certificate ./certificate.crt --private-key ./privkey.pem
 ```
 
 This will start listening on https://localhost:8080. 
@@ -461,7 +479,7 @@ This will start listening on https://localhost:8080.
 Furthermore, define host or port:
 
 ```bash script
-$ cat basic_example.yaml | rickle serve --host "0.0.0.0" --port 8077
+cat basic_example.yaml | rickle serve --host "0.0.0.0" --port 8077
 ```
 
 This will start listening on https://0.0.0.0:8077. 
@@ -469,21 +487,22 @@ This will start listening on https://0.0.0.0:8077.
 Automatically open a new browser tab:
 
 ```bash script
-$ cat basic_example.yaml | rickle serve -b
+cat basic_example.yaml | rickle serve -b
 ```
 
 Add Python functions to the YAML file (unsafe!):
 
-> **_CAUTION:_**  Using `--unsafe` should only be used on trusted data.
+> [!CAUTION]
+> Using `--unsafe` should only be used on trusted data.
 
 ```bash script
-$ export RICKLE_UNSAFE_LOAD=1
-$ cat unsafe_example.yaml | rickle serve --unsafe --load-lambda
+export RICKLE_UNSAFE_LOAD=1
+cat unsafe_example.yaml | rickle serve --unsafe --load-lambda
 ```
 
 This will start listening on http://localhost:8080, 
 and if there are Python functions defined in the YAML file, these will be executable. 
-This holds **security risks** though, and should only be used with caution.
+This holds **serious security risks** though, and should only be used with caution.
 
 ---
 
@@ -501,4 +520,4 @@ Please review some of the practices stated in [CONTRIBUTIONS.md](https://github.
 
 ---
 
-© [Zipfian Science](https://zipfian.science) 2020 - 2025
+© [Zipfian.sh](https://zipfian.sh) 2020 - 2025
