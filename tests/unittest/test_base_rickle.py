@@ -94,6 +94,7 @@ class TestBaseRickle(unittest.TestCase):
 
         with self.assertRaises(AttributeError):
             is_true = self.base_rickle.key_one == "value_one"
+
     def test_iterator(self):
         expected = {
             'first': {
@@ -127,6 +128,10 @@ class TestBaseRickle(unittest.TestCase):
         # Test searching for a term with no matches
         result = self.expanded_rickle.search_path("nonexistent")
         self.assertEqual(result, [], "Expected no results for nonexistent search term")
+
+    def test_find(self):
+        # TODO create expanded test
+        pass
 
     def test_callable_with_path(self):
         # Assuming the object can be called like custom_dict("/path/to/value")

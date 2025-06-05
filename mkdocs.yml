@@ -1,0 +1,93 @@
+site_name: rickle - Documentation
+site_url: https://zipfian.sh/docs/rickle
+repo_url: https://github.com/zipfian-sh/rickle/
+site_description: Documentation for using rickle, an all purpose configuration management software.
+copyright: Copyright &copy; 2020 - 2025 - zipfian.sh
+theme:
+  name: material
+  logo: rickle_logo.png
+  favicon: rickle_logo.png
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: orange
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: orange
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.indexes
+    - navigation.path
+#    - navigation.sections
+    - content.code.copy
+    - content.code.select
+    - navigation.path
+
+markdown_extensions:
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+     custom_fences:
+      - name: mermaid
+        class: mermaid
+        format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+        alternate_style: true
+nav:
+  - Getting Started:
+    - 'index.md'
+    - Installation: 'installation.md'
+    - Basic usage: 'basic_examples.md'
+    - Extended usage: 'extended_usage.md'
+  - API Reference:
+    - 'api/index.md'
+    - Rickle: 'api/rickle.md'
+    - Tools: 'api/tools.md'
+    - Schema: 'api/schema.md'
+  - CLI:
+    - Getting started: 'cli/index.md'
+    - Conversion: 'cli/conv.md'
+    - Object:
+        - 'cli/obj/index.md'
+        - "get": 'cli/obj/get.md'
+        - "set": 'cli/obj/set.md'
+        - "put": 'cli/obj/put.md'
+        - "rm": 'cli/obj/rm.md'
+        - "type": 'cli/obj/type.md'
+        - "search": 'cli/obj/search.md'
+        - "find": 'cli/obj/find.md'
+    - Schema:
+        - 'cli/schema/index.md'
+        - gen: 'cli/schema/gen.md'
+        - check: 'cli/schema/check.md'
+    - Serve: 'cli/serve.md'
+  - Development:
+    - "Changelog": 'changelog.md'
+    - "Contributing": 'contrib.md'
+    - "License": 'license.md'
+plugins:
+- mkdocstrings:
+    handlers:
+      python:
+        options:
+          show_inheritance_diagram: true
+          backlinks: tree
+        paths: [rickle]  # search packages in the src folder
