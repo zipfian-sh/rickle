@@ -47,11 +47,11 @@ full = [
 rickle = "rickle.cli:main"
 
 [project.urls]
-Homepage = "https://zipfian.sh/projects/rickle.html"
+Homepage = "https://zipfian.sh/tools/rickle.html"
 Documentation = "https://zipfian.sh/docs/rickle/"
 Repository = "https://github.com/zipfian-sh/rickle"
 Issues = "https://github.com/zipfian-sh/rickle/issues"
-Changelog = "https://zipfian.sh/docs/rickle/changelog/"
+Changelog = "https://zipfian.sh/docs/rickle/changelog.html"
 
 [tool.poetry.scripts]
 unittest = 'build_utils:all_unit_tests'

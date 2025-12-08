@@ -43,8 +43,8 @@ with structured data in a flexible and efficient manner.
 
 # Usage
 
-For usage examples see [examples](https://zipfian.science/docs/rickle/examples.html) page. 
-Documentation can be [found here](https://zipfian.science/docs/rickle/index.html). 
+For usage examples see [examples](https://zipfian.sh/docs/rickle/basic_examples.html) page. 
+Documentation can be [found here](https://zipfian.sh/docs/rickle/index.html). 
 
 ## 1. Install
 
@@ -508,7 +508,7 @@ This holds **serious security risks** though, and should only be used with cauti
 
 # Release
 
-See the version history in [changelog](https://zipfian.science/docs/rickle/changelog.html).
+See the version history in [changelog](https://zipfian.sh/docs/rickle/changelog.html).
 
 
 ---
@@ -516,7 +516,7 @@ See the version history in [changelog](https://zipfian.science/docs/rickle/chang
 # Contributing
 
 As this is an open source project, forks and PRs are welcome! 
-Please review some of the practices stated in [CONTRIBUTIONS.md](https://github.com/Zipfian-Science/rickled/blob/master/CONTRIBUTING.md).
+Please review some of the practices stated in [CONTRIBUTIONS.md](https://github.com/zipfian-sh/rickle/blob/master/CONTRIBUTING.md).
 
 ---
 
